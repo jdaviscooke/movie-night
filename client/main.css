@@ -5,14 +5,14 @@ body {
   background-image: linear-gradient(to bottom, #315481, #918e82 100%);
   background-attachment: fixed;
 
-  position: absolute;
+  position: relative;
   top: 0;
   bottom: 0;
   left: 0;
   right: 0;
 
-  padding: 0;
-  margin: 0;
+  padding: 2;
+  margin: 2;
 
   font-size: 14px;
 }

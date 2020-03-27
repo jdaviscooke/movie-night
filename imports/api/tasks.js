@@ -1,6 +1,7 @@
 import { Meteor } from 'meteor/meteor';
 import { Mongo } from 'meteor/mongo';
 import { check } from 'meteor/check';
+import {indexOf, remove} from 'lodash'
 
 export const Tasks = new Mongo.Collection('tasks');
 
@@ -26,11 +27,19 @@ Meteor.methods({
       throw new Meteor.Error('not-authorized');
     }
 
+    if (text.match("The Notebook")) {
+      throw new Meteor.Error('not-authorized');
+    }
+
     Tasks.insert({
       text,
       createdAt: new Date(),
       owner: this.userId,
       username: Meteor.users.findOne(this.userId).username,
+      votes: 0,
+      upvotedBy: [],
+      downvotedBy: [],
+      listWeight: 10
     });
   },
   'tasks.remove'(taskId) {
@@ -54,7 +63,7 @@ Meteor.methods({
       throw new Meteor.Error('not-authorized');
     }
 
-    Tasks.update(taskId, { $set: { checked: setChecked } });
+    Tasks.update(taskId, { $set: { checked: setChecked, listWeight: -10 } });
   },
   'tasks.setPrivate'(taskId, setToPrivate) {
     check(taskId, String);
@@ -69,4 +78,50 @@ Meteor.methods({
 
     Tasks.update(taskId, { $set: { private: setToPrivate } });
   },
+  'tasks.upvoteMovie'(taskId) {
+    check(taskId, String);
+
+    const task = Tasks.findOne(taskId);
+    console.log(task);
+    if (task.checked) {
+      return;
+    }
+    if(indexOf(task.upvotedBy, this.userId) > -1){
+      return;
+    }
+    if(indexOf(task.downvotedBy, this.userId) > -1){
+      remove(task.downvotedBy, userId => {
+        return userId === this.userId
+      })
+    }
+    const votes = task.votes + 1;
+    task.upvotedBy.push(this.userId)
+
+    Tasks.update(taskId, { $set: { votes, upvotedBy: task.upvotedBy, downvotedBy: task.downvotedBy } });
+    
+  },
+  'tasks.downvoteMovie'(taskId){
+    check(taskId, String);
+
+    const task = Tasks.findOne(taskId);
+
+    if (task.checked) {
+      return;
+    }
+    if(indexOf(task.downvotedBy, this.userId) > -1){
+      return;
+    }
+    if(indexOf(task.upvotedBy, this.userId) > -1){
+      remove(task.upvotedBy, userId => {
+        return userId === this.userId
+      })
+    }
+
+    const votes = task.votes - 1;
+
+    task.downvotedBy.push(this.userId)
+
+    Tasks.update(taskId, { $set: { votes, upvotedBy: task.upvotedBy, downvotedBy: task.downvotedBy } });
+
+  }
 });

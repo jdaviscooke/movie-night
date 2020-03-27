@@ -7,6 +7,7 @@ import { Tasks } from '../api/tasks.js';
 
 import Task from './Task.js';
 import AccountsUIWrapper from './AccountsUIWrapper.js';
+import {orderBy} from 'lodash'
 
 // App component - represents the whole app
 class App extends Component {
@@ -37,19 +38,14 @@ class App extends Component {
   }
 
   renderTasks() {
-    let filteredTasks = this.props.tasks;
-    if (this.state.hideCompleted) {
-      filteredTasks = filteredTasks.filter(task => !task.checked);
-    }
-    return filteredTasks.map((task) => {
+    const sortedTasks = orderBy(this.props.tasks, ['listWeight', 'votes'], ['desc', 'desc'])
+    return sortedTasks.map((task) => {
       const currentUserId = this.props.currentUser && this.props.currentUser._id;
-      const showPrivateButton = task.owner === currentUserId;
-
+      console.log(task)
       return (
         <Task
           key={task._id}
           task={task}
-          showPrivateButton={showPrivateButton}
         />
       );
     });
@@ -59,17 +55,7 @@ class App extends Component {
     return (
       <div className="container">
         <header>
-          <h1>Todo List ({this.props.incompleteCount})</h1>
-
-          <label className="hide-completed">
-            <input
-              type="checkbox"
-              readOnly
-              checked={this.state.hideCompleted}
-              onClick={this.toggleHideCompleted.bind(this)}
-            />
-            Hide Completed Tasks
-          </label>
+          <h1>Movies List</h1>
 
           <AccountsUIWrapper />
 
@@ -78,7 +64,7 @@ class App extends Component {
               <input
                 type="text"
                 ref="textInput"
-                placeholder="Type to add new tasks"
+                placeholder="Type to add a movie"
               />
             </form> : ''
           }
